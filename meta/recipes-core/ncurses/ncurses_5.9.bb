@@ -4,6 +4,7 @@ PR = "${INC_PR}.1"
 
 SRC_URI += "file://tic-hang.patch \
             file://config.cache \
+            file://fix-types-in-constructor-declaration.patch \
 "
 
 SRC_URI[md5sum] = "8cb9c412e5f2d96bc6f459aa8c6282a1"
