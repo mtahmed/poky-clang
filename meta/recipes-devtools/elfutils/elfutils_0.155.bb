@@ -23,6 +23,8 @@ SRC_URI += "\
 	file://nm-Fix-size-passed-to-snprintf-for-invalid-sh_name-case.patch \
 	file://elfutils-ar-c-fix-num-passed-to-memset.patch \
 	file://fix-build-gcc-4.8.patch \
+	file://rewrite-nested-functions-and-fix-types.patch \
+	file://replace-variable-length-array-in-structure.patch \
 "
 # Only apply when building uclibc based target recipe
 SRC_URI_append_libc-uclibc = " file://uclibc-support.patch"

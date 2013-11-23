@@ -32,6 +32,10 @@ These are the set of patches already included in this poky:
   taken from [http://trac.macports.org/ticket/30312](http://trac.macports.org/ticket/30312)
 - [db: atomic.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-support/db/db/atomic.patch):
   taken from [https://github.com/narkoleptik/os-x-berkeleydb-patch](https://github.com/narkoleptik/os-x-berkeleydb-patch)
+- [elfutils: rewrite-nested-functions-and-fix-types.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-devtools/elfutils/elfutils-0.155/rewrite-nested-functions-and-fix-types.patch):
+  adapted for 0.155 from [elfutils-clang-patches](https://github.com/m0use/elfutils-clang-patches)
+- [elfutils: replace-variable-length-array-in-structure.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-devtools/elfutils/elfutils-0.155/replace-variable-length-array-in-structure.patch):
+  wrote myself
 
 
 ## Contact

@@ -1,0 +1,194 @@
+Upstream-Status: Pending
+
+rewrite nested functions outside other functions and fix types
+
+This patch allows us to compile using clang, which doesn't allow
+nested functions.
+
+--- a/libebl/eblopenbackend.c	2012-08-27 14:27:31.000000000 -0400
++++ b/libebl/eblopenbackend.c	2013-11-25 12:17:38.349309840 -0500
+@@ -409,8 +409,7 @@
+ 
+ /* Find backend without underlying ELF file.  */
+ Ebl *
+-ebl_openbackend_machine (machine)
+-     GElf_Half machine;
++ebl_openbackend_machine (GElf_Half machine)
+ {
+   return openbackend (NULL, NULL, machine);
+ }
+--- a/libelf/elf32_updatefile.c	2012-08-27 14:29:10.000000000 -0400
++++ b/libelf/elf32_updatefile.c	2013-11-25 12:10:20.778003028 -0500
+@@ -101,6 +101,33 @@
+ }
+ 
+ 
++
++static void
++fill_mmap (char* last_position,
++                char* const shdr_start,
++                char* const shdr_end,
++                char* scn_start,
++                size_t offset)
++          {
++            size_t written = 0;
++
++            if (last_position < shdr_start)
++              {
++                written = MIN (scn_start + offset - last_position,
++                               shdr_start - last_position);
++
++                memset (last_position, __libelf_fill_byte, written);
++              }
++
++            if (last_position + written != scn_start + offset
++                && shdr_end < scn_start + offset)
++              {
++                char *fill_start = MAX (shdr_end, scn_start);
++                memset (fill_start, __libelf_fill_byte,
++                        scn_start + offset - fill_start);
++              }
++          }
++
+ int
+ internal_function
+ __elfw2(LIBELFBITS,updatemmap) (Elf *elf, int change_bo, size_t shnum)
+@@ -290,27 +317,6 @@
+ 	  Elf_Data_List *dl = &scn->data_list;
+ 	  bool scn_changed = false;
+ 
+-	  void fill_mmap (size_t offset)
+-	  {
+-	    size_t written = 0;
+-
+-	    if (last_position < shdr_start)
+-	      {
+-		written = MIN (scn_start + offset - last_position,
+-			       shdr_start - last_position);
+-
+-		memset (last_position, __libelf_fill_byte, written);
+-	      }
+-
+-	    if (last_position + written != scn_start + offset
+-		&& shdr_end < scn_start + offset)
+-	      {
+-		char *fill_start = MAX (shdr_end, scn_start);
+-		memset (fill_start, __libelf_fill_byte,
+-			scn_start + offset - fill_start);
+-	      }
+-	  }
+-
+ 	  if (scn->data_list_rear != NULL)
+ 	    do
+ 	      {
+@@ -325,7 +331,11 @@
+ 			|| ((scn->flags | dl->flags | elf->flags)
+ 			    & ELF_F_DIRTY) != 0))
+ 		  {
+-		    fill_mmap (dl->data.d.d_off);
++              fill_mmap (last_position,
++                         shdr_start,
++                         shdr_end,
++                         scn_start,
++                         dl->data.d.d_off);
+ 		    last_position = scn_start + dl->data.d.d_off;
+ 		  }
+ 
+@@ -377,7 +387,11 @@
+ 	      /* If the previous section (or the ELF/program
+ 		 header) changed we might have to fill the gap.  */
+ 	      if (scn_start > last_position && previous_scn_changed)
+-		fill_mmap (0);
++              fill_mmap (last_position,
++                         shdr_start,
++                         shdr_end,
++                         scn_start,
++                         0);
+ 
+ 	      /* We have to trust the existing section header information.  */
+ 	      last_position = scn_start + shdr->sh_size;
+--- a/libelf/elf_begin.c	2012-08-27 14:29:10.000000000 -0400
++++ b/libelf/elf_begin.c	2013-11-25 12:14:50.326500526 -0500
+@@ -582,7 +582,7 @@
+ 
+ 	      if (fstat (fildes, &st) == 0
+ 		  && (sizeof (size_t) >= sizeof (st.st_size)
+-		      || st.st_size <= ~((size_t) 0)))
++		      || st.st_size <= ~((off_t) 0)))
+ 		maxsize = (size_t) st.st_size;
+ 	    }
+ 
+@@ -985,6 +985,24 @@
+ }
+ 
+ 
++
++Elf *
++lock_dup_elf (fildes, cmd, ref)
++     int fildes;
++     Elf_Cmd cmd;
++     Elf *ref;
++{
++  /* We need wrlock to dup an archive.  */
++  if (ref->kind == ELF_K_AR)
++  {
++        rwlock_unlock (ref->lock);
++        rwlock_wrlock (ref->lock);
++  }
++
++  /* Duplicate the descriptor.  */
++  return dup_elf (fildes, cmd, ref);
++}
++
+ /* Return a descriptor for the file belonging to FILDES.  */
+ Elf *
+ elf_begin (fildes, cmd, ref)
+@@ -1011,19 +1029,6 @@
+       return NULL;
+     }
+ 
+-  Elf *lock_dup_elf ()
+-  {
+-    /* We need wrlock to dup an archive.  */
+-    if (ref->kind == ELF_K_AR)
+-      {
+-	rwlock_unlock (ref->lock);
+-	rwlock_wrlock (ref->lock);
+-      }
+-
+-    /* Duplicate the descriptor.  */
+-    return dup_elf (fildes, cmd, ref);
+-  }
+-
+   switch (cmd)
+     {
+     case ELF_C_NULL:
+@@ -1044,7 +1049,7 @@
+     case ELF_C_READ:
+     case ELF_C_READ_MMAP:
+       if (ref != NULL)
+-	retval = lock_dup_elf ();
++	retval = lock_dup_elf (fildes, cmd, ref);
+       else
+ 	/* Create descriptor for existing file.  */
+ 	retval = read_file (fildes, 0, ~((size_t) 0), cmd, NULL);
+@@ -1065,7 +1070,7 @@
+ 	      retval = NULL;
+ 	    }
+ 	  else
+-	    retval = lock_dup_elf ();
++	    retval = lock_dup_elf (fildes, cmd, ref);
+ 	}
+       else
+ 	/* Create descriptor for existing file.  */
+--- a/libelf/elf_readall.c	2012-08-27 14:27:31.000000000 -0400
++++ b/libelf/elf_readall.c	2013-11-25 12:16:23.496058522 -0500
+@@ -97,7 +97,7 @@
+ 	    goto read_error;
+ 
+ 	  if (sizeof (size_t) >= sizeof (st.st_size)
+-	      || st.st_size <= ~((size_t) 0))
++	      || st.st_size <= ~((off_t) 0))
+ 	    elf->maximum_size = (size_t) st.st_size;
+ 	  else
+ 	    {
