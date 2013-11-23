@@ -26,8 +26,12 @@ specific to `meta-tc-llvm` layer, see the `meta-tc-llvm` link above.
 
 These are the set of patches already included in this poky:
 
-- [busybox: find-get-rid-of-nested-functions.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-core/busybox/busybox-1.21.1/find-get-rid-of-nested-functions.patch)
-- [ncurses: fix-types-in-constructor-declaration.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-core/ncurses/ncurses-5.9/fix-types-in-constructor-declaration.patch)
+- [busybox: find-get-rid-of-nested-functions.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-core/busybox/busybox-1.21.1/find-get-rid-of-nested-functions.patch):
+  taken from upstream busybox repository
+- [ncurses: fix-types-in-constructor-declaration.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-core/ncurses/ncurses-5.9/fix-types-in-constructor-declaration.patch):
+  taken from [http://trac.macports.org/ticket/30312](http://trac.macports.org/ticket/30312)
+- [db: atomic.patch](https://github.com/mtahmed/poky/blob/master/meta/recipes-support/db/db/atomic.patch):
+  taken from [https://github.com/narkoleptik/os-x-berkeleydb-patch](https://github.com/narkoleptik/os-x-berkeleydb-patch)
 
 
 ## Contact

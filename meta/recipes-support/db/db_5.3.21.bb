@@ -17,7 +17,9 @@ RCONFLICTS_${PN} = "db3"
 
 SRC_URI = "http://download.oracle.com/berkeley-db/db-${PV}.tar.gz"
 SRC_URI += "file://arm-thumb-mutex_db5.patch;patchdir=.. \
-            file://fix-parallel-build.patch"
+            file://fix-parallel-build.patch \
+            file://atomic.patch;patchdir=.. \
+"
 
 SRC_URI[md5sum] = "3fda0b004acdaa6fa350bfc41a3b95ca"
 SRC_URI[sha256sum] = "ddd92a930317df92021054c03992392db9ea5cddba43bef8920d392a82114fb8"
