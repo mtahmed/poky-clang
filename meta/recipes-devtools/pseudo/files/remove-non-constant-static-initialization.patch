@@ -1,0 +1,18 @@
+Upstream-Status: Pending
+
+C standard doesn't require support for non-constant static initialization
+but pseudo uses those anyway because it's just a compiler warning in gcc.
+This fails for clang so we should remove this. It doesn't change the logic
+of the function anyway.
+
+--- a/pseudo_util.c	2013-11-23 19:19:20.047889798 -0500
++++ b/pseudo_util.c	2013-11-23 19:20:08.040682709 -0500
+@@ -98,7 +98,7 @@
+ int
+ pseudo_has_unload(char * const *envp) {
+ 	static const char unload[] = "PSEUDO_UNLOAD";
+-	static size_t unload_len = strlen(unload);
++	size_t unload_len = strlen(unload);
+ 	size_t i = 0;
+ 
+ 	/* Is it in the caller environment? */
