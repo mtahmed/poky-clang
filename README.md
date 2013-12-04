@@ -9,12 +9,29 @@ See [meta-tc-llvm](https://github.com/mtahmed/meta-tc-llvm). It's
 a secondary toolchain layer which needs to be added to this poky
 to help it compile using clang.
 
+## Status
+
+Able to build all the packages for core-image-minimal except the following:
+
+- linux-yocto-tiny
+- dtc
+- elfutils
+- gcc
+- gcc-cross
+- gcc-cross-initial
+- gcc-runtime
+- prelink
+- eglibc
+- rpm
+- libgcc
+- e2fsprogs
+
 ## Installation
 
 Simply clone this repository and add the `meta-tc-llvm` layer.
 
 ```bash
-git clone https://github.com/mtahmed/poky.git
+git clone https://github.com/mtahmed/poky-clang.git
 cd poky
 git clone https://github.com/mtahmed/meta-tc-llvm.git
 ```
